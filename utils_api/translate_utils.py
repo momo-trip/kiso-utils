@@ -932,7 +932,7 @@ def update_path_map(
         
     #write_json(mapping_file, mapping_data)
     
-    # この後に、rust_pathのキーでも探せるようにする
+    # After this, we'll make it so that it can also be searched using the rust_path key.
     if rust_child_path not in mapping_data:
         mapping_data[rust_child_path] = {}
     mapping_data[rust_child_path]["c_path"] = child_path
@@ -1010,7 +1010,7 @@ def get_setting_data(data, target_dir):  # , target # translation_dir,
     # print(dst_dir)
     # config_path = f"{dst_dir}/setting.json"
 
-    created_paths = [] #data['created_paths']  # これは危険なので
+    created_paths = [] #data['created_paths']  # This is dangerous
     if data is None:
         data = {}
 
