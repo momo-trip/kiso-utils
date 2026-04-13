@@ -85,7 +85,7 @@ from .utils import (
 #     save_coverage_report
 # )
 
-
+MACRO_PARSER_HOME = "/root/kiso-parser-macro"
 
 MANUAL_FIRST = False
 MANUAL = False
@@ -229,7 +229,7 @@ class PathConfig:
         
         
         # Tools
-        self.macro_finder = "/home/ubuntu/macrust/macro_finder/build/macro-finder"
+        self.macro_finder = f"{MACRO_PARSER_HOME}/macro_finder/build/macro-finder"
         self.marker = f'/* Genifai: here is one target function!: target_line */'
 
         # Target / Database
@@ -1503,7 +1503,7 @@ def normalize_key_path(key, base_path):
     """
     Convert file paths within a key to relative paths
     
-    Example: "test3_3:/home/ubuntu/allrust/trans_c_0000/mini2/test_1.c:3"
+    Example: "test3_3:{TRANS_HOME}/trans_c_0000/mini2/test_1.c:3"
          -> "test3_3:test_1.c:3"
     """
     # Assumes "name:path:line" format
@@ -1511,7 +1511,7 @@ def normalize_key_path(key, base_path):
     
     if len(parts) >= 3:
         # Extract the path portion (from the 2nd element to the one before the last)
-        # e.g.: ["test3_3", "/home/ubuntu/.../test_1.c", "3"]
+        # e.g.: ["test3_3", "/root/.../test_1.c", "3"]
         name = parts[0]
         line = parts[-1]
         # The path is the middle part separated by : (also considering Windows paths)
@@ -1734,7 +1734,7 @@ def denormalize_key_path(key, base_path):
     Convert relative paths within a key to absolute paths
     
     Example: "test3_3:test_1.c:3"
-         -> "test3_3:/home/ubuntu/allrust/trans_c_0000/mini2/test_1.c:3"
+         -> "test3_3:{TRANS_HOME}/trans_c_0000/mini2/test_1.c:3"
     """
     parts = key.split(':')
     
@@ -2249,7 +2249,7 @@ def normalize_metafiles(meta_dir, current_dir, all_macros_path, taken_macros_pat
 def normalize_location_string(location_str, base_path):
     """
     Convert file paths within a location string to relative paths
-    Example: "/home/ubuntu/macrust/trans_c/mini/main.c:6:9"
+    Example: f"{MACRO_HOME}/trans_c/mini/main.c:6:9"
           -> "mini/main.c:6:9"
     
     Args:
@@ -2281,7 +2281,7 @@ def normalize_location_string(location_str, base_path):
 def normalize_macro_key(macro_key, base_path):
     """
     Convert file paths within a macro_key to relative paths
-    Example: "DEBUG:/home/ubuntu/macrust/trans_c/mini/main.c:6:9"
+    Example: "DEBUG:{MACRO_HOME}/trans_c/mini/main.c:6:9"
           -> "DEBUG:mini/main.c:6:9"
     
     Args:
@@ -2322,11 +2322,11 @@ def normalize_condition_item(item, base_path):
     if 'file_path' in item:
         item['file_path'] = normalize_path(item['file_path'], base_path)
     
-    # macro_key (e.g.: "DEBUG:/home/ubuntu/.../main.c:6:9")
+    # macro_key (e.g.: "DEBUG:/root/.../main.c:6:9")
     if 'macro_key' in item:
         item['macro_key'] = normalize_macro_key(item['macro_key'], base_path)
     
-    # defined_at (e.g.: "/home/ubuntu/.../main.c:6:9")
+    # defined_at (e.g.: "/root/.../main.c:6:9")
     if 'defined_at' in item:
         item['defined_at'] = normalize_location_string(item['defined_at'], base_path)
     
@@ -2545,7 +2545,7 @@ def denormalize_location_string(location_str, base_path):
     """
     Convert file paths within a location string to absolute paths
     Example: "mini/main.c:6:9"
-          -> "/home/ubuntu/macrust/trans_c/mini/main.c:6:9"
+          -> f"{MACRO_HOME}/trans_c/mini/main.c:6:9"
     
     Args:
         location_str: Location string
@@ -2581,7 +2581,7 @@ def denormalize_macro_key(macro_key, base_path):
     """
     Convert file paths within a macro_key to absolute paths
     Example: "DEBUG:mini/main.c:6:9"
-          -> "DEBUG:/home/ubuntu/macrust/trans_c/mini/main.c:6:9"
+          -> "DEBUG:{MACRO_HOME}/trans_c/mini/main.c:6:9"
     
     Args:
         macro_key: Macro key string
