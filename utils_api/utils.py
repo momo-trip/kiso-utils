@@ -118,6 +118,7 @@ import random
 import string
 
 
+
 @dataclass
 class LineCoverage:
     line_number: int
@@ -2389,7 +2390,6 @@ def get_is_increased(target_entry, database_dir, previous_coverage, current_cove
 
 
 def write_testcase(snap_dir, saved_tests, timestamp): #run_test_path, timestamp):
-
     for run_test_path in saved_tests:
         ext = Path(run_test_path).suffix  # E.g., ".sh", ".py", ".c"
         #timestamp = get_timestamp() #datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -2408,11 +2408,8 @@ def write_testcase(snap_dir, saved_tests, timestamp): #run_test_path, timestamp)
         elif ext == ".c":
             #file_path = f"{snap_dir}/{timestamp}{ext}"
             copy_file(run_test_path, snap_dir)
-        
-
     return file_path
     
-
 
 def run_cov_script(test_type, cov_target, database_dir, snap_dir, tmp_dir, 
                    run_test_path, test_src_path, entry, 
@@ -2505,8 +2502,6 @@ def run_cov_script(test_type, cov_target, database_dir, snap_dir, tmp_dir,
 
     return error, std_out, iteration_count, is_covered, is_increased, diff, current_coverage, branch_coverage, line_coverage, function_coverage, timestamp, original_run_test_path  #, is_covered
     
-
-
 
 def run_branch_cov_script(test_type, database_dir, snap_dir, tmp_dir, run_test_path, test_src_path, 
                           entry, branch_path, line_path, function_path, target_dir, initial_coverage, 
@@ -2629,7 +2624,6 @@ def run_branch_cov_script(test_type, database_dir, snap_dir, tmp_dir, run_test_p
     # # Save to file
     # saved_file = save_annotated_code_to_file(target_file_path)
     # print(f"\nSaved annotated code: {saved_file}")
-
 
     delete_file(coverage_info_path)
 
@@ -2849,8 +2843,6 @@ def normalize_metadata(meta_dir, current_dir):
     print(f"Normalization complete: {len(meta_paths)} files processed")
 
 
-
-
 def denormalize_path(path_str, base_path):
     if not path_str:
         return path_str
@@ -2915,7 +2907,6 @@ def denormalize_metadata(meta_dir, current_dir):
 
 
 def merge_json(json1, json2):
-
     merged_json = json1.copy()  # Create a copy of json1
 
     for key, value in json2.items():
@@ -2945,9 +2936,7 @@ def merge_json(json1, json2):
 #     raise TypeError(f"Cannot merge list with dict: json1={type(json1)}, json2={type(json2)}")
 
 
-
 def merge_list(json1, json2):
-
     # Add handling for when the top level is a list
     #if isinstance(json1, list) and isinstance(json2, list):
     json1.extend(json2)
@@ -2979,7 +2968,6 @@ def get_all_files(directory):
 def get_last_directory(path: str) -> str:
     # Method 1: Using os.path.basename
     return os.path.basename(os.path.normpath(path))
-
 
 
 def add_line_numbers(input_file):

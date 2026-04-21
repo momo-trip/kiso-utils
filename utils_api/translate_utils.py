@@ -72,7 +72,6 @@ from .utils import (
     read_specific_lines,
 )
 
-
 # from llm_api import (
 #     RepairConfig,
 #     LLMInterface,
@@ -86,10 +85,6 @@ from .utils import (
 # )
 
 MACRO_PARSER_HOME = "/root/kiso-parser-macro"
-
-MANUAL_FIRST = False
-MANUAL = False
-
 
 class Logger:
     def __init__(self, file_path):
@@ -166,11 +161,6 @@ def set_log(log_dir, llm_choice, target, logging_path, step, DEBUG_LLM):
 
     return log_file_path
 
-
-
-"""
-Module for centralized management of path settings used across the entire project
-"""
 
 class PathConfig:
     """Class for managing path settings"""
@@ -483,51 +473,6 @@ def extract_all_paths(paths):
         paths.flag_build_path,
     )
 
-"""
-#paths.c_bank_dir,
-#paths.rust_bank_dir,
-#paths.translation_dir,
-# paths.modified_macro_path,
-# paths.matched_macro_path,
-
-#paths.insertion_path,
-#paths.c_output_dir,
-#paths.root_dir,
-
-#paths.build_path,
-#paths.initial_list_path,
-#paths.io_list_path,
-#paths.beg_list_path,
-#paths.compile_log_path,
-#paths.testcase_json_path,
-
-#paths.macro_path,
-#paths.initial_macro_path,
-#paths.all_macro_path,
-#paths.flag_json_path,
-#paths.macro_list_path,
-
-#paths.conds_status_path,
-#paths.token_path,
-"""
-
-# block_path = f"{database_dir}/block_output.txt"
-# block_group_path = f"{database_dir}/block_group_output.json" #txt"
-# taken_macros_path = f"{database_dir}/output_def.json"
-    
-
-# paths.cargo_path,
-# paths.c_lib_path,
-# paths.c_cargo_path,
-# paths.c_build_path,
-
-# paths.picked_path,
-# paths.classified_path,
-# paths.defined_path,
-# paths.undefined_path,
-# paths.cmd_line_path,
-# paths.namespace_path,
-# paths.build_list_path,
 
 
 def execute_command(command): # -> Tuple[None, str]:  # (command: str) -> Tuple[None, str]:
@@ -599,8 +544,8 @@ def obtain_c_path(rust_path, c_directory, rust_output_dir):
     else:
         c_path = base_path + "/" + initial_path[:-3] + suffix
 
-    print(base_path)
-    print(c_path)
+    # print(base_path)
+    # print(c_path)
     return c_path
 
 
@@ -1243,7 +1188,7 @@ def get_unit_code_with_location(one_unit, database_dir):  # , original_dir, targ
         #print(target_file_path)
         c_code_parts.append(f"*** {item['file_path']} ***")
         #code = read_specific_lines(item['file_path'], item['start_line'], item['end_line'])
-        code = get_specific_lined_code(database_dir, item['file_path'], item['start_line'], item['end_line'])
+        code = get_lined_specific_code(database_dir, item['file_path'], item['start_line'], item['end_line'])
         c_code_parts.append("******************************\n")
         #c_code_parts.append("=========")
         c_code_parts.append(code)
@@ -1272,40 +1217,26 @@ def get_lined_code(test_path, workspace_dir):
     return test_code
 
 
-def get_lined_specific_code(database_dir, test_path, start_line, end_line):
-    """
-    if not os.path.exists(test_path):
-        test_path = find_matching_path(work_dir, test_path)
-    """
+
+def get_lined_specific_code(database_dir, test_path, start_line, end_line, work_dir=None):
+    
+    if test_path is None:
+        return ""
+
+    if work_dir is not None:
+        if not os.path.exists(test_path):
+            test_path = find_matching_path(work_dir, test_path)
 
     target_code = read_specific_lines(test_path, start_line, end_line)
     
-    lined_test_path = "lined.txt" #"lined.c"
+    lined_test_path = f"{database_dir}/lined.txt" #"lined.c"
     write_file(lined_test_path, target_code)
-    add_line_numbers_custom(lined_test_path, start_line) #add_line_numbers(lined_test_path)
+    add_line_numbers_custom(lined_test_path, int(start_line)) #add_line_numbers(lined_test_path)
     test_code = read_file(lined_test_path)
 
     delete_file(lined_test_path)
 
     return test_code
-
-
-def get_specific_lined_code(database_dir, test_path, start_line, end_line):
-
-    test_code = ""
-
-    if test_path is not None and os.path.exists(test_path):
-        lined_test_path  = f"{database_dir}/lined.txt"  #"lined.c"
-
-        copy_file(test_path, lined_test_path)
-        add_line_numbers(lined_test_path)
-        #test_code = read_file(lined_test_path)
-
-        test_code = read_specific_lines(lined_test_path, start_line, end_line)
-        delete_file(lined_test_path)
-
-    return test_code
-
 
 
 def get_list_path(dep_json_path, target_dir, list_path):
