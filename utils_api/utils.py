@@ -8,7 +8,6 @@ import copy
 from copy import deepcopy
 from collections import defaultdict, deque
 import shutil
-import sys
 import subprocess
 from functools import reduce
 import clang.cindex
@@ -74,11 +73,9 @@ from typing import List, Set, Dict, Optional, Tuple
 from clang.cindex import Index, CursorKind, TranslationUnit
 from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Set, Tuple
-import sys
 from pathlib import Path
 import subprocess
 from clang.cindex import Index, CursorKind, Config
-import re
 from threading import Thread
 import argparse
 from clang.cindex import CompilationDatabase, Index
@@ -109,7 +106,6 @@ import pty
 import subprocess
 import termios
 import tty
-from typing import Tuple
 from pathlib import Path
 import stat
 import ijson
