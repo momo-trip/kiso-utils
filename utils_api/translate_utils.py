@@ -27,9 +27,7 @@ from collections import defaultdict, deque
 import chardet
 from pycparser import c_parser, c_ast
 import replicate
-import google.generativeai as genai  
 from typing import List, Any
-from google.generativeai.protos import Content, Part
 from anthropic import InternalServerError
 from collections import defaultdict
 import subprocess
@@ -45,9 +43,10 @@ import stat
 from openai import AzureOpenAI
 from openai import OpenAI
 import sys
+# import google.generativeai as genai  
 # from openai import RateLimitError, APIError
 # from testGen.main import print_hello
-
+# from google.generativeai.protos import Content, Part
 
 from .utils import (
     # normal
