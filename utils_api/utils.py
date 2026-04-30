@@ -2645,9 +2645,6 @@ def deduplicate_compile_commands(json_path):
     unique_commands = {}
     
     # Display progress
-    if compile_commands is None:
-        print(json_path)
-        sys.exit(0)
     total = len(compile_commands)
 
     #print(f"Number of entries before processing: {total}")
