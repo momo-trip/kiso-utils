@@ -114,7 +114,6 @@ import random
 import string
 
 
-
 @dataclass
 class LineCoverage:
     line_number: int
@@ -783,16 +782,8 @@ def get_last_directory(path: str) -> str:
     return os.path.basename(os.path.normpath(path))
 
 
-#############################################
-
 # from coverage instrument
 def get_line_coverage(coverage_info_path, directory, line_path, order_path) -> Dict[str, CoverageData]:
-    # Generate info using lcov
-    # if not hasattr(thread_local, 'uuid'):
-    #     thread_local.uuid = str(uuid.uuid4())
-    # thread_id = threading.get_ident()
-    # unique_id = f"{thread_id}_{thread_local.uuid}"
-
     line_percent = 0
 
     """
@@ -854,19 +845,10 @@ def get_line_coverage(coverage_info_path, directory, line_path, order_path) -> D
                     print(f"WARNING: Could not parse line data: {line}, Error: {e}")
                     continue
         
-            # elif line.startswith('DA:'):
-            #     line_num, count = map(int, line[3:].split(','))
-            #     coverage_data[current_file].add_line(line_num, count)
-
-    
     # Save to JSON file and Print summary
     print("Save coverage data to JSON file")
     print(coverage_data)
 
-    # if os.path.exists(output_file):
-    #     existing_data = read_json(output_file)
-    # else:
-    # existing_data = {}
     existing_data = {
         "total_lines" : None,
         "covered_lines" : None,
@@ -900,16 +882,8 @@ def get_line_coverage(coverage_info_path, directory, line_path, order_path) -> D
     total_lines = 0
     total_covered_lines = 0
     
-    #order = read_compile_order(order_path)
-    # absolute_order = []
-    # for path in order:
-    #     absolute_path = os.path.abspath(os.path.join(os.path.dirname(order_path), path))
-    #     absolute_order.append(absolute_path)
 
     for file_path, coverage in coverage_data.items():
-        # if file_path not in absolute_order:
-        #     continue
-
         print(f"\nFile: {file_path}")
         
         file_total_lines = 0
@@ -918,8 +892,7 @@ def get_line_coverage(coverage_info_path, directory, line_path, order_path) -> D
         for line_num in sorted(coverage.lines.keys()):
             line = coverage.lines[line_num]
             status = "covered" if line.is_covered else "uncovered"
-            #print(f"Line {line_num}: {status} (execution count: {line.execution_count})")
-            
+
             file_total_lines += 1
             if line.is_covered:
                 file_covered_lines += 1
@@ -1269,17 +1242,9 @@ def get_function_coverage(coverage_info_path, target_dir, function_path, order_p
                         print(f"Error: While processing FNDA line: {line}, Error details: {e}")
                         continue
     
-    # # Recalculate the number of functions and called functions for each file from the functions list
-    # for file_path, file_data in function_data["files"].items():
-    #     file_data["total_functions"] = len(file_data["functions"])
-    #     file_data["covered_functions"] = sum(1 for func in file_data["functions"] if func["called"])
-    
     # Recalculate the number of functions and called functions for each file from the functions list
     function_total = 0
     covered_total = 0
-
-    #related_ids = get_related_data(callee_main_path)
-    #callee_data = read_json(callee_path)
 
     for file_path, file_data in function_data["files"].items():
         def_file_path = file_path
@@ -1304,33 +1269,6 @@ def get_function_coverage(coverage_info_path, target_dir, function_path, order_p
 
         function_total += file_data["total_functions"]
         covered_total += file_data["covered_functions"]
-
-    # # Calculate coverage rate for each file
-    # for file_path, file_data in function_data["files"].items():
-        
-    #     # function_total_each = 0
-    #     # covered_total_each = 0
-
-    #     # related_ids = get_related_data_by_file(callee_main_path, file_path)
-    #     # for func in function_data["files"][file_path]["functions"]:
-    #     #     if func["name"] in related_funcs:
-    #     #         function_total_each += 1
-    #     #         if func["called"] > 0:
-    #     #             covered_total_each += 1
-        
-    #     # file_data["total_functions"] += function_total_each
-    #     # file_data["covered_functions"] += covered_total_each
-        
-    #     if file_path in order:
-    #         function_total += file_data["total_functions"]
-    #         covered_total += file_data["covered_functions"]
-
-    #     total = file_data["total_functions"]
-    #     covered = file_data["covered_functions"]
-    #     if total > 0:
-    #         file_data["coverage_percent"] = round((covered / total) * 100, 2)
-    #     else:
-    #         file_data["coverage_percent"] = 0
     
     # Calculate overall coverage rate
     function_data["total_functions"] = function_total
@@ -1387,7 +1325,6 @@ def get_coverage(cov_target, target_dir, database_dir, branch_path, line_path, f
     coverage_info_path = f"{database_dir}/coverage_{timestamp}.info" 
     #coverage_info_path = f"{database_dir}/coverage.info" 
     
-    ###
     """  
     # Get directories containing .gcda files
     gcda_dirs = get_gcda_directories(target_dir)
@@ -1432,9 +1369,7 @@ def get_coverage(cov_target, target_dir, database_dir, branch_path, line_path, f
             print(f"Failed to merge coverage: {e}")
             #return False
 
-    """  
-    ###
-    #"""    
+    """   
     try:
         subprocess.run(
             [
@@ -1456,8 +1391,6 @@ def get_coverage(cov_target, target_dir, database_dir, branch_path, line_path, f
         #return {"error": f"lcov command error: {e.stderr.decode()}", "total_branches": 0, "covered_branches": 0, "files": {}}
         return 0, 0, 0  # Fixed return value
 
-    #"""    
-
     # line coverage # coverage_data will be the latest one. # Parse coverage data
     order_path = "tmp_order.txt"
     # line_coverage, line_percent
@@ -1477,13 +1410,6 @@ def get_coverage(cov_target, target_dir, database_dir, branch_path, line_path, f
         copy_file(coverage_info_path, current_coverage_info_path)
     
     delete_file(coverage_info_path)
-
-
-    # global current_coverage
-    # if cov_target == "function":
-    #     current_coverage = coverage_percent #function_coverage
-    # elif cov_target == "branch":
-    #     current_coverage = branch_coverage
 
     branch_percent = round((branch_coverage / branch_max) * 100, 2) if branch_max > 0 else 0.0
     line_percent = round((line_coverage / line_max) * 100, 2) if line_max > 0 else 0.0
@@ -1595,8 +1521,6 @@ def get_branch_covered(target_file, target_function, start_line, end_line):
         return False #, f"Error: {str(e)}"
 
 
-#############################################
-
 def run_script_pty(script_path, timeout):
     print("Start: run_script_pty()")
     script_dir = os.path.dirname(script_path)
@@ -1641,7 +1565,6 @@ def run_script_pty(script_path, timeout):
     try:
         while True:
             try:
-                ##
                 # Timeout check
                 if timeout and (time.time() - start_time) > timeout:
                     timed_out = True
@@ -1652,8 +1575,6 @@ def run_script_pty(script_path, timeout):
                 ready_to_read, _, _ = select.select([master_fd], [], [], 0.1)
                 if not ready_to_read:
                     continue
-
-                ##
 
                 data = os.read(master_fd, 1024)
                 if not data:
@@ -1831,7 +1752,6 @@ def run_script(script_path, timeout, dir_move_flag, execute_log_path, option, pr
     except Exception as e:
         std_output = f"Unexpected error: {str(e)}" #, std_output, iteration_count
 
-
     finally:
 
         if result is not None:
@@ -1848,15 +1768,6 @@ def run_script(script_path, timeout, dir_move_flag, execute_log_path, option, pr
                         #print(result.stderr)
                 print(f"Wrote log file ({execute_log_path})")
 
-            # else:
-            #     if result.stdout:
-            #         print(result.stdout)
-            #     if result.stderr:
-            #         print(result.stderr)
-            #     print("Without log file")
-            # print(f"execute_log_path: {execute_log_path}")
-
-
             # Check for errors
             std_output = result.stdout if result.stdout is not None and result.stdout != "" else None
             error_output = result.stderr if result.stderr is not None and result.stderr != "" else None
@@ -1865,36 +1776,6 @@ def run_script(script_path, timeout, dir_move_flag, execute_log_path, option, pr
             print(f"type(result.stdout): {type(result.stdout)}") 
             print(f"type(result.stderr): {type(result.stderr)}") 
             print(f"return_code: {return_code}") 
-            
-            # if result.stdout:
-            #     std_output = result.stdout
-            # if result.stdout:
-            #     error_output = result.stderr
-
-            # added the realtime output
-            # pty_output = run_script_pty(script_path)
-            #std_output = pty_output
-            # print(pty_output)
-
-            """
-            if result.stdout.strip():
-                std_output = f"{result.stdout.strip()}"
-            if result.stdout: #result.returncode != 0:
-                # Combine stderr and stdout if there's an error
-                error_output = result.stderr.strip()
-                # if result.stdout.strip():
-                    #error_output += f"\nStdout: {result.stdout.strip()}"
-                    #std_output += f"\nStdout: {result.stdout.strip()}"
-
-                print("-------- error_output start ---------")
-                print(result.stderr)
-                print("-------- error_output end ---------")
-                #return error_output
-                return error_output, std_output
-
-            return None, None
-            """
-
             
             if error_output and return_code == 0:
                 #print("\nBuild information:")
@@ -1907,32 +1788,13 @@ def run_script(script_path, timeout, dir_move_flag, execute_log_path, option, pr
             if error_output is None and return_code == 1: # Mainly for "initial_testcase"
                 #error_output = "Return code is 1, abnormal termination."
                 error_output = "Return code 1: abnormal termination."
-            
-            # if std_output is not None and isinstance(std_output, str):
-            #     std_output = std_output.split('\n') if std_output else None
-            
-            # if error_output is not None and isinstance(error_output, str):
-            #     error_output = error_output.split('\n') if error_output else None
 
-
-            if progress_queue: # and log_dir:
+            if progress_queue:
                 if error_output:
                     if log_dir:
                         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                         os.makedirs(log_dir, exist_ok=True)
                         log_file = os.path.join(log_dir, f"generation_{timestamp}.log")
-
-                        # logging.basicConfig(
-                        #     filename=log_file,
-                        #     level=logging.DEBUG,
-                        #     format='%(asctime)s - %(levelname)s - %(message)s'
-                        # )
-                        # logging.info(f"Script execution started: {script_path}")
-                        # if error_output:
-                        #     logging.error(f"Error occurred: {error_output}")
-                        # if std_output:
-                        #     logging.info(f"Output: {std_output}")
-                    
 
                         # Create log content
                         log_content = f"=== Execution Log - {timestamp} ===\n\n"
@@ -1970,9 +1832,6 @@ def run_script(script_path, timeout, dir_move_flag, execute_log_path, option, pr
                     }))
         if mode == "modify_data":
             iteration_count += 1
-
-        # print(iteration_count)
-        # print(max_iterations)
     
     return error_output, std_output, iteration_count
 
@@ -2032,8 +1891,6 @@ def check_script_state(script_path: str, timeout: int = 5) -> Tuple[bool, str]:
         return False, f"An error occurred: {str(e)}"
 
 
-
-
 #sudo ln -s $(pwd)/shell_runner/target/release/shell_runner /usr/local/bin/
 def run_script_wo_log(script_path, timeout, dir_move_flag, execute_log_path, option): # -> Union[str, None]:
     
@@ -2077,15 +1934,12 @@ def run_script_wo_log(script_path, timeout, dir_move_flag, execute_log_path, opt
         if option == "init":
             cmd.append("init")
 
-        #print(cmd)
-
         """
         if option == "compile":
             cmd.append("--build")
         elif option == "run":
             cmd.append("--run")
         """
-        
         
         print(f"Execute run_script: {script_path} at {execute_dir}")
 
@@ -2103,7 +1957,6 @@ def run_script_wo_log(script_path, timeout, dir_move_flag, execute_log_path, opt
                 shell=False #shell=True  # Required for shell scripts
             )
         else:
-            #print("Run with some execute_dir")
             result = subprocess.run(
                 cmd,
                 #env=env,
@@ -2127,35 +1980,11 @@ def run_script_wo_log(script_path, timeout, dir_move_flag, execute_log_path, opt
                     #print(result.stderr)
             print(f"Wrote log file ({execute_log_path})")
 
-        # else:
-        #     if result.stdout:
-        #         print(result.stdout)
-        #     if result.stderr:
-        #         print(result.stderr)
-        #     print("Without log file")
-        # print(f"execute_log_path: {execute_log_path}")
-
-
         # Check for errors
         std_output = result.stdout if result.stdout is not None and result.stdout != "" else None
         error_output = result.stderr if result.stderr is not None and result.stderr != "" else None
         return_code = result.returncode  # Get return_code here
 
-        #if std_output:
-        # print("---------- std_output ----------")
-        # print(std_output)
-        # #if error_output:
-        # print("---------- error_output ----------")
-        # print(error_output) # = result.stderr
-
-        #"""
-
-        # print("---------- error_output ----------")
-        # print(error_output) # = result.stderr
-        # print("----------------------------------")
-
-        # Judging by return code is not a good approach.
-        #"""
         if error_output and return_code == 0:
             #print("\nBuild information:")
             if std_output is None:
@@ -2163,7 +1992,7 @@ def run_script_wo_log(script_path, timeout, dir_move_flag, execute_log_path, opt
             else:
                 std_output += "\n" + error_output  # Append with a newline
             error_output = None
-        #"""
+
         """
         if error_output: # and return_code == 0:
             if not is_rust_error(error_output): # If an error pattern is found
@@ -2175,17 +2004,9 @@ def run_script_wo_log(script_path, timeout, dir_move_flag, execute_log_path, opt
 
         print("---------- std_output ----------")
         print(std_output)
-        #if error_output:
         print("---------- error_output ----------")
-        print(error_output) # = result.stderr
+        print(error_output)
         print("----------------------------------")
-
-
-        # if result.stdout:
-        #     std_output = result.stdout
-        # if result.stdout:
-        #     error_output = result.stderr
-        
 
         return error_output, std_output
 
@@ -2238,7 +2059,6 @@ def get_is_covered(target_entry, cov_path, target_dir, cov_type): #def find_firs
             
         return None
 
-
     elif cov_type == "branch":
         try:
             with open(cov_path, 'r') as f:
@@ -2250,7 +2070,7 @@ def get_is_covered(target_entry, cov_path, target_dir, cov_type): #def find_firs
                 
             file_coverage = coverage_data['files'][abs_path]
 
-            total_branches = [] #len(file_coverage['branches'])
+            total_branches = []
             uncovered_branches = []
 
             for branch in file_coverage['branches']:
@@ -2322,19 +2142,11 @@ def get_is_covered(target_entry, cov_path, target_dir, cov_type): #def find_firs
 
 def get_is_increased(target_entry, database_dir, previous_coverage, current_coverage, cov_type):
 
-    # if TARGET == "function":
-    #     current_coverage = function_coverage
-
-    # elif TARGET == "branch":
-    #     current_coverage = branch_coverage
-
     print(f"target_entry: {target_entry}")
     file_path = target_entry['target_path']
     target_line = target_entry['target_line']
     target_branch = target_entry['target_branch']
     target_function = target_entry['target_function']
-
-    # current_coverage, line_coverage = get_coverage(target_dir, branch_path, line_path, order_path)
 
     is_increased = False
 
@@ -2350,16 +2162,13 @@ def get_is_increased(target_entry, database_dir, previous_coverage, current_cove
 
     is_increased = None
     diff = None
-    #"""
+
     # Putting this on hold since it causes an error here
     if previous_coverage < current_coverage:
         is_increased = True
         diff = current_coverage - previous_coverage
     else:
         diff = 0
-
-    #previous_coverage = current_coverage
-    #"""
 
     increased = []
     if os.path.exists(f"{database_dir}/cov_increased.json"):
@@ -2384,12 +2193,9 @@ def get_is_increased(target_entry, database_dir, previous_coverage, current_cove
     return is_increased, diff
 
 
-
-def write_testcase(snap_dir, saved_tests, timestamp): #run_test_path, timestamp):
+def write_testcase(snap_dir, saved_tests, timestamp):
     for run_test_path in saved_tests:
         ext = Path(run_test_path).suffix  # E.g., ".sh", ".py", ".c"
-        #timestamp = get_timestamp() #datetime.now().strftime("%Y%m%d_%H%M%S")
-        #file_path = f"{snap_dir}/{timestamp}.sh"
 
         """
         if ext in [".sh", ".c"]:
@@ -2402,8 +2208,8 @@ def write_testcase(snap_dir, saved_tests, timestamp): #run_test_path, timestamp)
             copy_file(run_test_path, file_path)
         
         elif ext == ".c":
-            #file_path = f"{snap_dir}/{timestamp}{ext}"
             copy_file(run_test_path, snap_dir)
+
     return file_path
     
 
@@ -2411,8 +2217,7 @@ def run_cov_script(test_type, cov_target, database_dir, snap_dir, tmp_dir,
                    run_test_path, test_src_path, entry, 
                    branch_path, line_path, function_path, target_dir, initial_coverage, 
                    function_branch_path, progress_queue, iteration_count, max_iterations,
-                   log_dir, mode
-                   ): # option # timeout, dir_move_flag, option, 
+                   log_dir, mode): 
 
     print("run cov_script...")
 
@@ -2460,17 +2265,11 @@ def run_cov_script(test_type, cov_target, database_dir, snap_dir, tmp_dir,
     delete_file(function_branch_path)
     copy_file(function_path, function_branch_path)
 
-
     write_json(f"{tmp_dir}/target_{timestamp}.json", entry)
-    #copy_file(f"{tmp_dir}/target_{timestamp}.json", snap_dir)
 
     copy_file(branch_path, f"{tmp_dir}/cov_branch_{timestamp}.json")
     copy_file(line_path, f"{tmp_dir}/cov_line_{timestamp}.json")
     copy_file(function_path, f"{tmp_dir}/cov_function_{timestamp}.json")
-
-    #copy_file(f"{tmp_dir}/cov_branch_{timestamp}.json", snap_dir)
-    #copy_file(f"{tmp_dir}/cov_line_{timestamp}.json", snap_dir)
-    #copy_file(f"{tmp_dir}/cov_function_{timestamp}.json", snap_dir)
 
     delete_file(f"{tmp_dir}/target_{timestamp}.json")
 
@@ -2551,32 +2350,22 @@ def run_branch_cov_script(test_type, database_dir, snap_dir, tmp_dir, run_test_p
     except subprocess.CalledProcessError as e:
         #print(f"Error running lcov: {e.stderr.decode()}")
         print(f"Error running lcov: -")
-        #return {"error": f"lcov command error: {e.stderr.decode()}", "total_branches": 0, "covered_branches": 0, "files": {}}
 
     # branch coverage
     branch_coverage, branch_percent = get_branch_coverage(coverage_info_path, target_dir, branch_path) #, order_path)
 
     print("++++++++++++++++++++")
     print(f'{branch_coverage} ({branch_percent} %)')
-    #print(f'{line_coverage} ({line_percent:.2f} %)')
-    #print(f'{function_coverage} ({coverage_percent} %)')
     print("++++++++++++++++++++")
 
-
-    # if TARGET == "function":
-    #     current_coverage = function_coverage
-    # elif TARGET == "branch":
     current_coverage = branch_coverage
 
-    #error, std_out = run_script(run_path, 10, True, None, "both")
     is_covered = None
 
-    is_covered = get_is_covered(entry, cov_type_path, target_dir, "branch") #(entry, line_path, target_dir) # Detect whether the target_line is covered
+    is_covered = get_is_covered(entry, cov_type_path, target_dir, "branch")
     if is_covered is None:
         print("cov_type_path")
-        print(cov_type_path)
 
-    #is_increased, diff = get_is_increased(entry, previous_coverage, current_coverage)
     is_increased, diff = get_is_increased(entry, database_dir, initial_coverage, current_coverage, "branch")
 
     timestamp = get_timestamp()
@@ -2931,7 +2720,6 @@ def merge_json(json1, json2):
 # if isinstance(json1, list) or isinstance(json2, list):
 #     # If only one is a list (type mismatch)
 #     raise TypeError(f"Cannot merge list with dict: json1={type(json1)}, json2={type(json2)}")
-
 
 def merge_list(json1, json2):
     # Add handling for when the top level is a list
