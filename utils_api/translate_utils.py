@@ -1357,7 +1357,7 @@ def normalize_translation_div_metadata(meta_dir, current_dir):
                             callee_item['usage_location'] = f"{use_path}:{use_line}:{use_column}"
                         else:
                             callee_item['usage_location'] = f"{use_path}"
-            ##
+
             if 'components' in item:
                 for each_item in item['components']: #.items():
                     if 'file_path' in each_item:

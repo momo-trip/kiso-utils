@@ -1097,10 +1097,8 @@ def get_branch_coverage(coverage_info_path, target_dir, branch_path): #, order_p
     branch_total = 0
     covered_total = 0
     for file_path, file_data in branch_data["files"].items():
-        ## if file_path in order:
         branch_total += file_data["total_branches"]
         covered_total += file_data["covered_branches"]
-        ##
 
         total = file_data["total_branches"]
         covered = file_data["covered_branches"]
@@ -1311,10 +1309,9 @@ def get_random_void():
     return f"0000000000000"
 
 
-
-def get_coverage(cov_target, target_dir, database_dir, branch_path, line_path, function_path): #, order_path): # , taregt_json ############
+def get_coverage(cov_target, target_dir, database_dir, branch_path, line_path, function_path):
     
-    delete_file(line_path) #get_file_coverage(target_dir)
+    delete_file(line_path)
     delete_file(branch_path)
 
     random = get_random_void()
@@ -1393,15 +1390,12 @@ def get_coverage(cov_target, target_dir, database_dir, branch_path, line_path, f
 
     # line coverage # coverage_data will be the latest one. # Parse coverage data
     order_path = "tmp_order.txt"
-    # line_coverage, line_percent
     line_coverage, line_max = get_line_coverage(coverage_info_path, target_dir, line_path, order_path)
     
     # branch coverage
-    # branch_percent
     branch_coverage, branch_max = get_branch_coverage(coverage_info_path, target_dir, branch_path) #, order_path)
 
     # function coverage
-    # coverage_percent
     function_coverage, function_max = get_function_coverage(coverage_info_path, target_dir, function_path, order_path) 
 
     # Update here
@@ -2026,7 +2020,7 @@ def get_timestamp():
     return timestamp
 
 
-def get_is_covered(target_entry, cov_path, target_dir, cov_type): #def find_first_uncovered_line(target_entry, cov_path) -> Optional[int]:
+def get_is_covered(target_entry, cov_path, target_dir, cov_type):
 
     print(f"target_entry: {target_entry}")
     file_path = target_entry['target_path']
@@ -2396,9 +2390,6 @@ def run_branch_cov_script(test_type, database_dir, snap_dir, tmp_dir, run_test_p
     # delete_file(f"{tmp_dir}/cov_line_{timestamp}.json")
     # delete_file(f"{tmp_dir}/cov_function_{timestamp}.json")
 
-
-    ####### added
-
     # target_file_path = "src/main.c"  # Change to the actual path
     
     # # Get and display the annotated code
@@ -2546,8 +2537,6 @@ def append_json(file_path, new_data):
         json.dump(existing_data, f, indent=2, ensure_ascii=False)
 
 
-##
-
 def normalize_path(path_str, base_path):
 
     if not path_str:
@@ -2635,7 +2624,6 @@ def denormalize_path(path_str, base_path):
     
     try:
         path = Path(path_str)
-        
         # If already an absolute path, return as-is
         if path.is_absolute():
             return str(path)
@@ -2751,6 +2739,9 @@ def get_all_files(directory):
 
 
 def get_last_directory(path: str) -> str:
+    if path is None:
+        return None
+        
     # Method 1: Using os.path.basename
     return os.path.basename(os.path.normpath(path))
 
@@ -2764,7 +2755,6 @@ def add_line_numbers(input_file):
                 lines = list(infile)
                 # Handle the case where the file is empty
                 if not lines:
-                    #print(f"File {input_file} is empty.")
                     return
 
                 max_line_num = len(lines)
