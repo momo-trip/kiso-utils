@@ -219,7 +219,7 @@ class PathConfig:
         
         # Tools
         self.macro_finder = f"{MACRO_PARSER_HOME}/macro_finder/build/macro-finder"
-        self.marker = f'/* Genifai: here is one target function!: target_line */'
+        self.marker = f'/* Here is one target function: target_line */'
 
         # Target / Database
         if process_type in ["s_repair", "trans"]:
