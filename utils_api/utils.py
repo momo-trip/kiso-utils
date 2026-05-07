@@ -2741,7 +2741,7 @@ def get_all_files(directory):
 def get_last_directory(path: str) -> str:
     if path is None:
         return None
-        
+
     # Method 1: Using os.path.basename
     return os.path.basename(os.path.normpath(path))
 
@@ -2941,3 +2941,63 @@ def save_to_output_dir(output: dict, output_dir: str):
     """
 
     return copied
+
+
+
+def _is_different_file(actual_path: Path, referenced_name: str) -> bool:
+    """
+    Determines whether the filename referenced by #line differs from the actual file.
+    """
+    if referenced_name.startswith("<"):
+        return False
+    
+    actual_name = actual_path.name
+    referenced_stem = Path(referenced_name).name
+    
+    return actual_name != referenced_stem
+
+
+
+def detect_auto_generated_files(project_dir: str) -> dict[str, list[dict]]:
+    """
+    Scans C source files within the project directory
+    and detects files considered auto-generated based on #line directives.
+    
+    Returns:
+        dict: {auto-generated file path: [list of detected #line directive information]}
+    """
+    line_directive_pattern = re.compile(
+        r'^\s*#\s*(?:line\s+)?(\d+)\s+"([^"]+)"', re.MULTILINE
+    )
+    
+    generated_files: dict[str, list[dict]] = {}
+    project_path = Path(project_dir).resolve()
+    
+    for source_file in project_path.rglob("*"):
+        if source_file.suffix not in (".c", ".h", ".cc", ".cpp", ".cxx"):
+            continue
+        
+        try:
+            content = source_file.read_text(encoding="utf-8", errors="replace")
+        except (OSError, PermissionError):
+            continue
+        
+        directives = []
+        for line_no, line in enumerate(content.split("\n"), start=1):
+            match = line_directive_pattern.match(line)
+            if match:
+                referenced_file = match.group(2)
+                referenced_line = int(match.group(1))
+                
+                if _is_different_file(source_file, referenced_file):
+                    directives.append({
+                        "actual_line": line_no,
+                        "referenced_file": referenced_file,
+                        "referenced_line": referenced_line,
+                        "raw": line.strip(),
+                    })
+        
+        if directives:
+            generated_files[str(source_file)] = directives
+    
+    return generated_files
