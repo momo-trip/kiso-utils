@@ -213,7 +213,7 @@ def read_json(file_path): # Specifying encoding='utf-8' makes it environment-ind
             data = json.load(file)
         return data
     except FileNotFoundError:
-        print(f"File not found: {file_path}")
+        # print(f"File not found: {file_path}")
         return None
     except json.JSONDecodeError as e:
         print(f"Error occurred while parsing JSON data in {file_path}: {e}")
