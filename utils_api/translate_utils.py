@@ -12,7 +12,6 @@ import subprocess
 from functools import reduce
 import clang.cindex
 clang.cindex.Config.set_library_file('/usr/lib/llvm-19/lib/libclang.so.1') 
-#clang.cindex.Config.set_library_file('/opt/homebrew/opt/llvm/lib/libclang.dylib') # for mac os
 from clang.cindex import CursorKind
 import tempfile
 from pydantic import BaseModel
@@ -43,6 +42,7 @@ import stat
 from openai import AzureOpenAI
 from openai import OpenAI
 import sys
+import uuid
 # import google.generativeai as genai  
 # from openai import RateLimitError, APIError
 # from testGen.main import print_hello
@@ -236,8 +236,6 @@ class PathConfig:
             self.execute_path = f"{self.work_dir}/execute.sh"
             self.run_all_path = f"{self.work_dir}/run_all.sh"  # self.run_all_path = f"{self.target_dir}/run_all.sh"
         
-        # print(self.run_all_path)
-
         self.build_path = f"{self.target_dir}/c_build.sh"  #f"{self.rust_output_dir}/src/build.rs"
         self.run_test_path = f"{self.target_dir}/run_test.sh"
 
@@ -543,8 +541,6 @@ def obtain_c_path(rust_path, c_directory, rust_output_dir):
     else:
         c_path = base_path + "/" + initial_path[:-3] + suffix
 
-    # print(base_path)
-    # print(c_path)
     return c_path
 
 
@@ -686,7 +682,7 @@ def load_code_segment(file_path, start_line, end_line):
         lines = file.readlines()
         return ''.join(lines[start_line-1:end_line])
     
-def get_current_code(json_path): #def adjust_for_cfg(json_path):
+def get_current_code(json_path):
     data = read_json(json_path)
     #data = json.loads(json_data)
     
@@ -708,10 +704,8 @@ def get_current_code(json_path): #def adjust_for_cfg(json_path):
             item['current_code'] = f"Error: File not found - {file_path}"
         except IOError:
             item['current_code'] = f"Error: Unable to read file - {file_path}"
-
     
     write_json(json_path, data)
-    #return json.dumps(data, ensure_ascii=False, indent=2)
 
     # For rust_code, set current_code for anything that is not a function
     data = read_json(json_path)
@@ -725,7 +719,7 @@ def get_current_code(json_path): #def adjust_for_cfg(json_path):
 def is_blank_line(line):
     return len(line.strip()) == 0
 
-def find_other_intervals(rust_path, meta_dir): # c_path, 
+def find_other_intervals(rust_path, meta_dir): 
     meta_data, meta_path = obtain_metadata(rust_path, meta_dir, True, None, "def")
     
     # Exclude items where end_line is None
@@ -874,8 +868,7 @@ def update_path_map(
 
         mapping_data[parent_path]["child_path"].append(child_path)
         
-    #write_json(mapping_file, mapping_data)
-    
+
     # After this, we'll make it so that it can also be searched using the rust_path key.
     if rust_child_path not in mapping_data:
         mapping_data[rust_child_path] = {}
@@ -949,11 +942,7 @@ def get_path_map(mapping_file: str, file_path: str, option: str):
 
 
 
-def get_setting_data(data, target_dir):  # , target # translation_dir, 
-    # dst_dir = f"{translation_dir}/{target}"
-    # print(dst_dir)
-    # config_path = f"{dst_dir}/setting.json"
-
+def get_setting_data(data, target_dir):
     created_paths = [] #data['created_paths']  # This is dangerous
     if data is None:
         data = {}
@@ -989,7 +978,7 @@ def get_setting_data(data, target_dir):  # , target # translation_dir,
     run_all_path = f"{target_dir}/{run_all_path}"
 
     #write_json(config_path, data)
-    return build_path, run_test_path, run_all_path, filetered_target_funcs # filetered_created_paths,  # , run_all_path #created_paths
+    return build_path, run_test_path, run_all_path, filetered_target_funcs 
 
 
 
@@ -1098,9 +1087,16 @@ def add_line_numbers(input_file):
                 # Read all lines and get the maximum indent level and line count
                 lines = list(infile)
                 if not lines:
-                    #print(f"File {input_file} is empty.")
                     return
 
+                # If the whole file is already line-numbered, do nothing (prevent double-numbering / idempotent)
+                non_empty = [l for l in lines if l.strip()]
+                already_numbered = bool(non_empty) and all(
+                    re.match(r'^Line\s+\d+\s*\[\d+\]:\s', l) for l in non_empty
+                )
+                if already_numbered:
+                    return
+                    
                 max_line_num = len(lines)
                 max_indent = max((len(line) - len(line.lstrip())) // 4 for line in lines)
                 
@@ -1119,8 +1115,7 @@ def add_line_numbers(input_file):
                 
         # Overwrite the original file with the contents of the temporary file
         os.replace(temp_file.name, input_file)
-        #print(f"Wrote file with line numbers and indent levels to {input_file}.")
-
+        
     except UnicodeDecodeError:
         print(f"Warning: Skipping binary file: {input_file}")
         return
@@ -1139,8 +1134,16 @@ def add_line_numbers_custom(input_file, fixed_number):
                 # Read all lines and get the maximum indent level and line count
                 lines = list(infile)
                 if not lines:
-                    #print(f"File {input_file} is empty.")
                     return
+                
+                # If the whole file is already line-numbered, do nothing (prevent double-numbering / idempotent)
+                non_empty = [l for l in lines if l.strip()]
+                already_numbered = bool(non_empty) and all(
+                    re.match(r'^Line\s+\d+\s*\[\d+\]:\s', l) for l in non_empty
+                )
+                if already_numbered:
+                    return
+
                 max_line_num = len(lines)
                 max_indent = max((len(line) - len(line.lstrip())) // 4 for line in lines)
                 
@@ -1159,37 +1162,30 @@ def add_line_numbers_custom(input_file, fixed_number):
                 
         # Overwrite the original file with the temporary file contents
         os.replace(temp_file.name, input_file)
-        #print(f"Wrote file with line numbers and indent levels to {input_file}.")
+
     except IOError as e:
         #print(f"An error occurred: {e}")
         print(f"An error occurred: {e}")
 
 
-def get_unit_code(one_unit):  # , original_dir, target_dir
+def get_unit_code(one_unit): 
     c_code_parts = []
     
     for item in one_unit:
-        #target_file_path = item['file_path'].replace(os.path.abspath(target_dir), os.path.abspath(original_dir))
-        #print(target_file_path)
         code = read_specific_lines(item['file_path'], item['start_line'], item['end_line'])
-        #c_code_parts.append("=========")
         c_code_parts.append(code)
     
     # Join the list with newlines into a single string
     return '\n'.join(c_code_parts)
 
 
-def get_unit_code_with_location(one_unit, database_dir):  # , original_dir, target_dir
+def get_unit_code_with_location(one_unit, database_dir):
     c_code_parts = []
     
     for item in one_unit:
-        #target_file_path = item['file_path'].replace(os.path.abspath(target_dir), os.path.abspath(original_dir))
-        #print(target_file_path)
         c_code_parts.append(f"*** {item['file_path']} ***")
-        #code = read_specific_lines(item['file_path'], item['start_line'], item['end_line'])
         code = get_lined_specific_code(database_dir, item['file_path'], item['start_line'], item['end_line'])
         c_code_parts.append("******************************\n")
-        #c_code_parts.append("=========")
         c_code_parts.append(code)
     
     # Join the list with newlines into a single string
@@ -1197,19 +1193,40 @@ def get_unit_code_with_location(one_unit, database_dir):  # , original_dir, targ
 
 
 
-def get_lined_code(test_path, workspace_dir):
+def get_lined_code(test_path, workspace_dir, chunk_tokens=20000, encoding_name="cl100k_base"):
     if not os.path.exists(test_path):
         test_path = find_matching_path(workspace_dir, test_path)
 
     test_code = None
     if os.path.exists(test_path):
-        lined_test_path = "lined.txt" #"lined.c"
-        copy_file(test_path, lined_test_path)
-        add_line_numbers(lined_test_path)
-        #add_line_numbers_custom(test_path, fixed_number)
-        test_code = read_file(lined_test_path)
-
-        delete_file(lined_test_path)
+        # Random temp file name to avoid collisions across concurrent runs
+        lined_test_path = os.path.join(tempfile.gettempdir(), f"lined_{uuid.uuid4().hex}.txt") # lined_test_path = "lined.txt"
+        
+        try:
+            copy_file(test_path, lined_test_path)
+            add_line_numbers(lined_test_path)
+            test_code = read_file(lined_test_path)
+        finally:
+            if os.path.exists(lined_test_path):
+                delete_file(lined_test_path)
+ 
+    # Truncate if the lined code is too large
+    if chunk_tokens is not False:
+        # read_file may return bytes; normalize to str before tokenizing
+        if isinstance(test_code, bytes):
+            test_code = test_code.decode("utf-8", errors="replace")
+        elif not isinstance(test_code, str):
+            test_code = str(test_code)
+        
+        
+        enc = tiktoken.get_encoding(encoding_name) # enc = get_encoder(encoding_name)
+        tokens = enc.encode(test_code)
+        if len(tokens) > chunk_tokens:
+            test_code = enc.decode(tokens[:chunk_tokens])
+            test_code += (
+                f"\n\n// (... the code is truncated here because it exceeded "
+                f"{chunk_tokens} tokens. Use read_data mode with file_slices to read the remaining lines.)\n"
+            )
 
     if test_code is None:
         test_code = "" # If the file does not exist, avoid a None error in the prompt.
@@ -1217,7 +1234,7 @@ def get_lined_code(test_path, workspace_dir):
 
 
 
-def get_lined_specific_code(database_dir, test_path, start_line, end_line, work_dir=None):
+def get_lined_specific_code(database_dir, test_path, start_line, end_line, work_dir=None, chunk_tokens=20000, encoding_name="cl100k_base"):
     
     if test_path is None:
         return ""
@@ -1227,14 +1244,29 @@ def get_lined_specific_code(database_dir, test_path, start_line, end_line, work_
             test_path = find_matching_path(work_dir, test_path)
 
     target_code = read_specific_lines(test_path, start_line, end_line)
-    
-    lined_test_path = f"{database_dir}/lined.txt" #"lined.c"
+
+    lined_test_path = os.path.join(tempfile.gettempdir(), f"lined_{uuid.uuid4().hex}.txt") # lined_test_path = "lined.txt" #lined_test_path = f"{database_dir}/lined.txt" #"lined.c"
     write_file(lined_test_path, target_code)
-    add_line_numbers_custom(lined_test_path, int(start_line)) #add_line_numbers(lined_test_path)
+    add_line_numbers_custom(lined_test_path, int(start_line))
     test_code = read_file(lined_test_path)
 
     delete_file(lined_test_path)
 
+    # read_file may return bytes; normalize to str before tokenizing
+    if isinstance(test_code, bytes):
+        test_code = test_code.decode("utf-8", errors="replace")
+    elif not isinstance(test_code, str):
+        test_code = str(test_code)
+        
+    # Truncate if the lined code is too large
+    enc = tiktoken.get_encoding(encoding_name) # enc = get_encoder(encoding_name)
+    tokens = enc.encode(test_code)
+    if len(tokens) > chunk_tokens:
+        test_code = enc.decode(tokens[:chunk_tokens])
+        test_code += (
+            f"\n\n// (... the code is truncated here because it exceeded "
+            f"{chunk_tokens} tokens. Use read_data mode with file_slices to read the remaining lines.)\n"
+        )
     return test_code
 
 
@@ -1631,9 +1663,6 @@ def normalize_translation_metadata(meta_dir, target_dir):
         
         # Save changes
         current_dir = os.getcwd()
-        # print(target_dir)
-        # print(meta_dir)
-        # print(json_file)
 
         if str(target_dir) in str(json_file):
             relative_part = str(json_file).split(str(target_dir))[-1].lstrip('/')
