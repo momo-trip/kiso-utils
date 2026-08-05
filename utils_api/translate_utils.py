@@ -100,31 +100,33 @@ class Logger:
 
 
 def set_log(log_dir, llm_choice, target, logging_path, step, DEBUG_LLM):
-    if step == 'pre_processing':
-        prefix = 'pre'
-    elif step == 'divide':
-        prefix = 'div'
-    elif step == 'convert':
-        prefix = 'conv'
-    elif step == 's_repair':
-        prefix = 'f_rep'
-    else:
-        prefix = step
-        #raise ValueError("Invalid step value. Use 'pre_processing' or 'convert'.")
-
-    if llm_choice == 'gpt':
-        llm_type = 'gpt'
-    elif llm_choice == 'claude':
-        llm_type = 'claude'
-    elif llm_choice == 'claude_azure':
-        llm_type = 'claude_azure'
-    elif llm_choice == 'gemini':
-        llm_type = 'gemini'
-    elif llm_choice == 'llama':
-        llm_type = 'llama'
-    else:
-        raise ValueError("Invalid step value. Use an approproate llm_choice.")
+    # if step == 'pre_processing':
+    #     prefix = 'pre'
+    # elif step == 'divide':
+    #     prefix = 'div'
+    # elif step == 'convert':
+    #     prefix = 'conv'
+    # elif step == 's_repair':
+    #     prefix = 'f_rep'
+    # else:
+    #     prefix = step
+    #     #raise ValueError("Invalid step value. Use 'pre_processing' or 'convert'.")
     
+    prefix = step
+    llm_type = llm_choice
+
+    # if llm_choice == 'gpt':
+    #     llm_type = 'gpt'
+    # elif llm_choice == 'claude':
+    #     llm_type = 'claude'
+    # elif llm_choice == 'claude_azure':
+    #     llm_type = 'claude_azure'
+    # elif llm_choice == 'gemini':
+    #     llm_type = 'gemini'
+    # elif llm_choice == 'llama':
+    #     llm_type = 'llama'
+    # else:
+    #     raise ValueError("Invalid step value. Use an approproate llm_choice.")
     
     data = {}
     if os.path.exists(logging_path):
@@ -139,10 +141,10 @@ def set_log(log_dir, llm_choice, target, logging_path, step, DEBUG_LLM):
     else:
         num = 1
     
-    log_file_path = f'{log_dir}/{target}/{num}_{target}_{prefix}_{llm_type}.log'
+    log_file_path = f'{log_dir}/{prefix}/{num}_{llm_type}.log'
 
     if DEBUG_LLM:
-        log_file_path = f'{log_dir}/{target}/{num}_{target}_{prefix}_{llm_type}_see.log'
+        log_file_path = f'{log_dir}/{prefix}/{num}_{llm_type}_see.log'
 
     num += 1  # Fixed increment
     if target not in data:
@@ -159,6 +161,22 @@ def set_log(log_dir, llm_choice, target, logging_path, step, DEBUG_LLM):
     sys.stderr = Logger(log_file_path)  # Also log error messages to the file
 
     return log_file_path
+
+
+
+def record_log(log_path):
+
+    if os.path.exists(log_path):
+        delete_file(log_path)
+
+    # Create the directory if it does not exist
+    log_directory = os.path.dirname(log_path)
+    if not os.path.exists(log_directory):
+        os.makedirs(log_directory)
+
+    sys.stdout = Logger(log_path)
+    sys.stderr = Logger(log_path)  # Also log error messages to the file
+
 
 
 class PathConfig:
@@ -1092,7 +1110,8 @@ def add_line_numbers(input_file):
                 # If the whole file is already line-numbered, do nothing (prevent double-numbering / idempotent)
                 non_empty = [l for l in lines if l.strip()]
                 already_numbered = bool(non_empty) and all(
-                    re.match(r'^Line\s+\d+\s*\[\d+\]:\s', l) for l in non_empty
+                    #re.match(r'^Line\s+\d+\s*\[\d+\]:\s', l) for l in non_empty
+                    re.match(r'^\s*Line\s+\d+\s*\[\s*\d+\s*\]:\s', l) for l in non_empty
                 )
                 if already_numbered:
                     return
@@ -1139,7 +1158,8 @@ def add_line_numbers_custom(input_file, fixed_number):
                 # If the whole file is already line-numbered, do nothing (prevent double-numbering / idempotent)
                 non_empty = [l for l in lines if l.strip()]
                 already_numbered = bool(non_empty) and all(
-                    re.match(r'^Line\s+\d+\s*\[\d+\]:\s', l) for l in non_empty
+                    # re.match(r'^Line\s+\d+\s*\[\d+\]:\s', l) for l in non_empty
+                    re.match(r'^\s*Line\s+\d+\s*\[\s*\d+\s*\]:\s', l) for l in non_empty
                 )
                 if already_numbered:
                     return
@@ -1184,7 +1204,7 @@ def get_unit_code_with_location(one_unit, database_dir):
     
     for item in one_unit:
         c_code_parts.append(f"*** {item['file_path']} ***")
-        code = get_lined_specific_code(database_dir, item['file_path'], item['start_line'], item['end_line'])
+        code = get_lined_specific_code(database_dir, item['file_path'], item['start_line'], item['end_line']) #, item['start_line'], item['end_line'])
         c_code_parts.append("******************************\n")
         c_code_parts.append(code)
     
@@ -1732,7 +1752,7 @@ def denormalize_translation_metadata(meta_dir, target_dir, record_flag):
         meta_data = read_json(json_file)
         
         if record_flag is True and is_already_denormalized(meta_data):
-            print(f"skip (already denormalized): {json_file}")
+            # print(f"skip (already denormalized): {json_file}")
             continue
 
         # Create a new dictionary (to transform the keys)
@@ -2846,3 +2866,20 @@ def get_name_key(item):
     
     return name_key
 
+
+def get_name(item):
+    name = None
+
+    if item.get('kind') == "top_level_use":
+        name = "top_level_use"
+    elif 'type' in item:
+        if item['type'] in ["IFDEF", "IFNDEF", "IF", "ELIF"]:
+            name = item['type']
+        elif 'name' in item:
+            name = item['name']
+        else:
+            raise ValueError("The name should be defined by 'name' or 'type'.")
+    else:
+        name = item["name"]
+
+    return name

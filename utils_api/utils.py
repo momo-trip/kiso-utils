@@ -303,7 +303,7 @@ def write_file(target_path, content):
 def copy_file(source_path, destination_path):
     try: # Copy the source file to the destination path
         shutil.copy2(source_path, destination_path)
-        print("The file was copied successfully.")
+        # print("The file was copied successfully.")
     except IOError as e:
         print(f"An error occurred while copying the file: {e}")
     except Exception as e:
@@ -371,6 +371,18 @@ def create_permissioned_file(file_path):
         #print(f"File '{file_path}' created successfully.")
     except Exception as e:
         print(f"An error occurred: {e}")
+
+
+
+def grant_permission_to_file(file_path):
+    """Grant execute permission to a file (chmod +x, preserving existing bits)."""
+    if not os.path.exists(file_path):
+        print(f"Warning: cannot grant permission, file does not exist: {file_path}")
+        return False
+
+    current = os.stat(file_path).st_mode
+    os.chmod(file_path, current | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+    return True
 
 
 def create_directory(path):
@@ -2498,6 +2510,12 @@ def find_compile_commands_json(target_dir): #def get_compile_commands(target_dir
 
 
 def recreate_directory(dir_path):
+    """Delete and recreate a directory"""
+    delete_directory(dir_path)
+    create_directory(dir_path)
+
+
+def reset_directory(dir_path):
     """Delete and recreate a directory"""
     delete_directory(dir_path)
     create_directory(dir_path)
