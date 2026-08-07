@@ -669,11 +669,13 @@ def grant_permissions(target_dir): #: str, dry_run: bool = False) -> list:
     for file_path in target_path.rglob('*'):
         if file_path.is_file():
             # Get the current permissions
-            current_mode = file_path.stat().st_mode
-            
-            # If the user does not have write permission
-            if not (current_mode & stat.S_IWUSR):
+            # current_mode = file_path.stat().st_mode
+            if not os.access(str(file_path), os.W_OK):
                 readonly_files.append(str(file_path))
+
+            # If the user does not have write permission
+            # if not (current_mode & stat.S_IWUSR):
+            #     readonly_files.append(str(file_path))
     
     # Display results
     if readonly_files:
@@ -685,21 +687,33 @@ def grant_permissions(target_dir): #: str, dry_run: bool = False) -> list:
         print("-" * 60)
         
         if not dry_run:
-            #print(f"\nGranting write permissions...")
+            # print(f"\nGranting write permissions...")
+            # for f in readonly_files:
+            #     file_path = Path(f)
+            #     current_mode = file_path.stat().st_mode
+            #     # Add write permission for the user
+            #     new_mode = current_mode | stat.S_IWUSR
+            #     os.chmod(f, new_mode)
+            # print(f"Done: Granted write permission to {len(readonly_files)} files")
+
             print(f"\nGranting write permissions...")
+            granted = 0
+            skipped = []
             for f in readonly_files:
-                file_path = Path(f)
-                current_mode = file_path.stat().st_mode
-                # Add write permission for the user
-                new_mode = current_mode | stat.S_IWUSR
-                os.chmod(f, new_mode)
-            #print(f"Done: Granted write permission to {len(readonly_files)} files")
-            print(f"Done: Granted write permission to {len(readonly_files)} files")
+                try:
+                    os.chmod(f, os.stat(f).st_mode | stat.S_IWUSR)
+                    granted += 1
+                except PermissionError:
+                    skipped.append(f)
+            print(f"Done: Granted write permission to {granted} files")
+            if skipped:
+                print(f"Skipped {len(skipped)} files (not owner)")
+                for f in skipped:
+                    print(f"  {f}")
+
         else:
-            #print(f"\ndry_run=True: Skipped permission changes")
             print(f"\ndry_run=True: Skipped permission changes")
     else:
-        #print(f"No read-only files found in: {target_path}")
         print(f"No read-only files found in: {target_path}")
     
     return readonly_files
@@ -719,7 +733,12 @@ def check_permission(raw_dir):
         for fpath in read_only_files:
             mode = oct(os.stat(fpath).st_mode)[-3:]
             print(f"  [{mode}] {fpath}")
-            os.chmod(fpath, os.stat(fpath).st_mode | stat.S_IWUSR)
+            # os.chmod(fpath, os.stat(fpath).st_mode | stat.S_IWUSR)
+            try:
+                os.chmod(fpath, os.stat(fpath).st_mode | stat.S_IWUSR)
+            except PermissionError:
+                print(f"warning: chmod skipped (not owner): {fpath}")
+                
         print(f"Granted write permission to {len(read_only_files)} files.")
     else:
         print(f"No read-only files found in {raw_dir}")

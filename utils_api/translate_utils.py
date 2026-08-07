@@ -236,7 +236,7 @@ class PathConfig:
         
         
         # Tools
-        self.macro_finder = f"{MACRO_PARSER_HOME}/macro_finder/build/macro-finder"
+        # self.macro_finder = f"{MACRO_PARSER_HOME}/macro_finder/build/macro-finder"
         self.marker = f'/* Here is one target function: target_line */'
 
         # Target / Database
@@ -437,7 +437,7 @@ def extract_all_paths(paths):
         paths.exp_dir,
         paths.archive_dir,
         
-        paths.macro_finder,
+        #paths.macro_finder,
         paths.database_dir,
         #paths.lib_path,
         
